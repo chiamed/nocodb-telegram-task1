@@ -1,16 +1,7 @@
-from dotenv import load_dotenv
 import os
 import json
 import requests
-
-# NocoDB API prefix
-DATA_PREFIX = "api/v2/tables"
-
-# Load environment variables
-load_dotenv()
-
-auth_token = os.getenv("nocodb_auth_token")
-base_url = os.getenv("nocodb_url")
+from config import DATA_PREFIX, auth_token, base_url
 
 # Authenticate
 headers = {
