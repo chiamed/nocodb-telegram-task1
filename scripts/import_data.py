@@ -10,38 +10,47 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# Normalize values for comparison (lowercase and without spaces)
+def api_get(url: str):
+    r = requests.get(url, headers=headers)
+    r.raise_for_status()
+    return r.json()
+
+def api_post(url: str, payload: dict):
+    r = requests.post(url, json=payload, headers=headers)
+    r.raise_for_status()
+    return r.json()
+
 def normalize(val):
-    if val is None:
+    """Normalize strings to lowercase without spaces for comparison."""
+    if not val:
         return ""
     if not isinstance(val, str):
         val = str(val)
     return val.strip().lower()
 
-# Return a set of normalized existing values for key_field
 def get_existing_keys(table_id, key_field):
+    """
+    Return a set of normalized values for key_field in the target table.
+    Prevents duplicate uploads.
+    """
     existing = set()
     offset = 0
     PAGE_LIMIT = 200
 
     while True:
         url = f"{base_url}/{DATA_PREFIX}/{table_id}/records?limit={PAGE_LIMIT}&offset={offset}"
-        r = requests.get(url, headers=headers)
-        r.raise_for_status()
-        data = r.json()
+        data = api_get(url)
 
+        # Handle both NocoDB formats (dict or list)
         if isinstance(data, dict) and "list" in data:
             records = data["list"]
             is_last = data.get("pageInfo", {}).get("isLastPage", False)
-        elif isinstance(data, list):
+        else:
             records = data
             is_last = len(records) < PAGE_LIMIT
-        else:
-            raise RuntimeError("Unexpected GET response shape")
 
         for rec in records:
-            raw = rec.get(key_field)
-            norm = normalize(raw)
+            norm = normalize(rec.get(key_field))
             if norm:
                 existing.add(norm)
 
@@ -54,11 +63,13 @@ def get_existing_keys(table_id, key_field):
     return existing
 
 
-# Upload only missing records and return mapping key -> recordId
 def upload_and_build_map(json_path, table_id, key_field):
+    """
+    Upload records from json_path into table_id.
+    Only inserts missing items.
+    Returns: map of key -> recordId
+    """
     url = f"{base_url}/{DATA_PREFIX}/{table_id}/records"
-
-    #print(f"\nImporting {json_path} into table {table_id}")
 
     with open(json_path, "r", encoding="utf-8") as f:
         items = json.load(f)
@@ -71,16 +82,20 @@ def upload_and_build_map(json_path, table_id, key_field):
         norm = normalize(key)
 
         if norm in existing:
-            # fetch ID of already existing record
-            q = f'?where=({key_field},eq,{key})'
-            r = requests.get(f"{url}{q}", headers=headers)
-            rec = r.json()["list"][0]
-            id_map[key] = rec["Id"]
+            # Retrieve ID of existing record
+            query = f"?where=({key_field},eq,{key})"
+            existing_rec = api_get(url + query)
+            record_id = existing_rec["list"][0]["Id"]
+            id_map[key] = record_id
             continue
 
-        # insert if missing
-        r = requests.post(url, headers=headers, json=item)
-        record_id = r.json()["Id"]
+        # Insert new record
+        created = api_post(url, item)
+        record_id = created.get("Id")
+
+        if not record_id:
+            raise RuntimeError(f"Missing 'Id' in response: {created}")
+
         id_map[key] = record_id
         existing.add(norm)
 
@@ -105,15 +120,13 @@ def upload_users(json_path, table_id, areas_map, departments_map):
             u["departments_id"] = departments_map.get(u["Department"])
 
         if u.get("Area"):
-            area_key = u["Area"].split(" - ")[0]
-            u["areas_id"] = areas_map.get(area_key)
+            u["areas_id"] = areas_map.get(u["Area"].split(" - ")[0])
 
-        # Upload user
-        r = requests.post(url, headers=headers, json=u)
-        if r.status_code >= 400:
-            print("ERROR:", r.text, "\nUser:", u)
-            raise Exception("User upload failed")
-        #print("Users imported successfully!\n")
+        # Insert
+        created = api_post(url, u)
+
+        if "Id" not in created:
+            raise Exception(f"Upload failed for: {u}")
 
         existing.add(email)
         sleep(0.03)
