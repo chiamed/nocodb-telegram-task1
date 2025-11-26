@@ -17,6 +17,10 @@ nocodb-telegram-task/
 │   └── handlers/
 │       └── add_user_wizard.py   # Wizard to add a new user step-by-step
 │
+├── services/
+│   └── helpers.py               # fetch_id_map + build_inline_keyboard
+│   └── validators.py            # Validation of fields of the new user
+│
 ├── scripts/                     # Data import module
 │   └── import_data.py
 │
