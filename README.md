@@ -87,7 +87,7 @@ python -m bot.bot
 ```
 
 ### Available Commands
- **`/help`**: Displays all available commands and a short description of what they do.
+- **`/help`**: Displays all available commands and a short description of what they do.
 - **`/odg`**: Retrieves an example **Ordine del Giorno (ODG)** from the dedicated NocoDB table.
 - **`/adduser`**: Starts an interactive multi-step wizard to add a new user to NocoDB. The wizard handles attributes such as:
   - Name / Surname
@@ -101,7 +101,7 @@ python -m bot.bot
 ### 🧪 6. Example Workflow
 1. Launch NocoDB with Docker
 2. Open the NocoDB UI and create tables
-3. Copy `.env.example` → `.env` and fill all variables
+3. Copy `.env.example` to `.env` and fill all variables
 4. Import JSON sample data:
    ```bash
    python -m scripts.import_data
