@@ -13,7 +13,25 @@ logging.basicConfig(
 )
 """
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="I'm the Eagle Racing Team's bot, here to assist you in managing internal activities, like adding a new user or checking the ODG!")
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=(
+            "🦅 Welcome to the Eagle Racing Team Bot! \n\n"
+            "I'm here to help you manage internal activities — "
+            "from adding new users to checking the latest Ordini del Giorno.\n\n"
+            "Type /help to see all available commands."
+        ),
+        parse_mode="Markdown"
+    )
+
+async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    help_text = (
+    "👋 Here I am to help you! These are the commands you can use:\n\n"
+    "➡️ /start — Start the bot and get a quick introduction\n"
+    "➡️ /odg — View the latest Ordini del Giorno\n"
+    "➡️ /adduser — Begin the guided process to add a new user\n\n"
+)
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
 
 async def odg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = f"{base_url}/{DATA_PREFIX}/{table_odg}/records"
@@ -51,6 +69,7 @@ async def odg(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     app = ApplicationBuilder().token(bot_token).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help))
     app.add_handler(CommandHandler("odg", odg))
     app.add_handler(add_user_conv_handler)
     app.run_polling()

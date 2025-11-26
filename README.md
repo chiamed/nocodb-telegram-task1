@@ -87,6 +87,7 @@ python -m bot.bot
 ```
 
 ### Available Commands
+ **`/help`**: Displays all available commands and a short description of what they do.
 - **`/odg`**: Retrieves an example **Ordine del Giorno (ODG)** from the dedicated NocoDB table.
 - **`/adduser`**: Starts an interactive multi-step wizard to add a new user to NocoDB. The wizard handles attributes such as:
   - Name / Surname
@@ -110,8 +111,20 @@ python -m bot.bot
    python -m bot.bot
    ```
 6. Interact via Telegram:
+   - `/help`
    - `/odg`
    - `/adduser`
+
+#### Example Interaction:
+- **Adding a User**:
+  1. Start the wizard with `/adduser`.
+  2. Follow the prompts to enter details such as name, surname, email, department, and more.
+  3. Confirm the entered data to save the user to the database.
+
+- **Viewing ODG**:
+  1. Use `/odg` to fetch and display the latest **Ordine del Giorno** from the database.
+
+This workflow ensures a smooth setup and interaction with the NocoDB and Telegram bot system.
 
 ---
 
